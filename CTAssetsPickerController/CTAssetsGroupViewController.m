@@ -52,7 +52,6 @@
 
 @property (nonatomic, weak) CTAssetsPickerController *picker;
 @property (nonatomic, strong) NSMutableArray *groups;
-@property (nonatomic, strong) ALAssetsGroup *defaultGroup;
 
 @end
 
@@ -93,7 +92,7 @@
 
 - (CTAssetsPickerController *)picker
 {
-    return (CTAssetsPickerController *)self.navigationController.parentViewController;
+    return (CTAssetsPickerController *)self.navigationController;
 }
 
 
@@ -123,14 +122,14 @@
     if (self.picker.showsCancelButton)
     {
         self.navigationItem.leftBarButtonItem =
-        [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Cancel", nil)
+        [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"취소", nil)
                                          style:UIBarButtonItemStylePlain
                                         target:self.picker
                                         action:@selector(dismiss:)];
     }
     
     self.navigationItem.rightBarButtonItem =
-    [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Done", nil)
+    [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"다음", nil)
                                      style:UIBarButtonItemStyleDone
                                     target:self.picker
                                     action:@selector(finishPickingAssets:)];
@@ -174,15 +173,7 @@
                 shouldShowGroup = YES;
             
             if (shouldShowGroup)
-            {
                 [self.groups addObject:group];
-                
-                if ([self.picker.delegate respondsToSelector:@selector(assetsPickerController:isDefaultAssetsGroup:)])
-                {
-                    if ([self.picker.delegate assetsPickerController:self.picker isDefaultAssetsGroup:group])
-                        self.defaultGroup = group;
-                }
-            }
         }
         else
         {
@@ -337,7 +328,7 @@
     
     [[self.toolbarItems objectAtIndex:1] setTitle:[self.picker toolbarTitle]];
     
-    [self.navigationController setToolbarHidden:(selectedAssets.count == 0) animated:YES];
+    [self.picker setToolbarHidden:(selectedAssets.count == 0) animated:YES];
 }
 
 
@@ -346,31 +337,10 @@
 - (void)reloadData
 {
     if (self.groups.count > 0)
-    {
-        [self hideAuxiliaryView];
         [self.tableView reloadData];
-        [self pushDefaultAssetsGroup:self.defaultGroup];
-    }
     else
-    {
         [self showNoAssets];
-    }
 }
-            
-            
-#pragma mark - Default Assets Group
-
-- (void)pushDefaultAssetsGroup:(ALAssetsGroup *)group
-{
-    if (group)
-    {
-        CTAssetsViewController *vc = [[CTAssetsViewController alloc] init];
-        vc.assetsGroup = group;
-        
-        self.navigationController.viewControllers = @[self, vc];
-    }
-}
-    
 
 
 #pragma mark - Not allowed / No assets
@@ -379,27 +349,12 @@
 {
     self.title = nil;
     self.tableView.backgroundView = [self.picker notAllowedView];
-    [self setAccessibilityFocus];
 }
 
 - (void)showNoAssets
 {
     self.tableView.backgroundView = [self.picker noAssetsView];
-    [self setAccessibilityFocus];
 }
-
-- (void)hideAuxiliaryView
-{
-    self.tableView.backgroundView = nil;
-}
-
-- (void)setAccessibilityFocus
-{
-    self.tableView.accessibilityLabel = self.tableView.backgroundView.accessibilityLabel;
-    self.tableView.isAccessibilityElement = YES;
-    UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, self.tableView);
-}
-
 
 
 #pragma mark - Table view data source
@@ -423,7 +378,7 @@
     if (cell == nil)
         cell = [[CTAssetsGroupViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
     
-    [cell bind:[self.groups objectAtIndex:indexPath.row] showNumberOfAssets:self.picker.showsNumberOfAssets];
+    [cell bind:[self.groups objectAtIndex:indexPath.row]];
     
     return cell;
 }
@@ -436,7 +391,7 @@
     CTAssetsViewController *vc = [[CTAssetsViewController alloc] init];
     vc.assetsGroup = [self.groups objectAtIndex:indexPath.row];
     
-    [self.navigationController pushViewController:vc animated:YES];
+    [self.picker pushViewController:vc animated:YES];
 }
 
 @end

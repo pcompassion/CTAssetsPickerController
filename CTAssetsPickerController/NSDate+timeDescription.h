@@ -1,5 +1,5 @@
 /*
- CTAssetsPickerConstants.m
+ NSDate+timeDescription.h
  
  The MIT License (MIT)
  
@@ -25,6 +25,13 @@
  
  */
 
-CGFloat const kThumbnailLength = 78.0f;
-CGSize const kThumbnailSize = {kThumbnailLength, kThumbnailLength};
-CGSize const kPopoverContentSize = {320, 480};
+#import <Foundation/Foundation.h>
+
+
+
+@interface NSDate (timeDescription)
+
++ (NSString *)timeDescriptionOfTimeInterval:(NSTimeInterval)timeInterva;
++ (NSDateComponents *)componetsWithTimeInterval:(NSTimeInterval)timeInterval;
+
+@end

@@ -25,12 +25,6 @@
  
  */
 
-#import <UIKit/UIKit.h>
-
-
-
-
-
 extern CGFloat const kThumbnailLength;
 extern CGSize const kThumbnailSize;
 extern CGSize const kPopoverContentSize;

@@ -28,9 +28,6 @@
 #import "CTAssetsPickerConstants.h"
 #import "CTAssetsPickerController.h"
 #import "CTAssetsGroupViewController.h"
-#import "CTAssetsPageViewController.h"
-#import "CTAssetsViewControllerTransition.h"
-
 
 
 
@@ -38,7 +35,7 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
 
 
 
-@interface CTAssetsPickerController () <UINavigationControllerDelegate>
+@interface CTAssetsPickerController ()
 
 @property (nonatomic, strong) ALAssetsLibrary *assetsLibrary;
 
@@ -52,71 +49,37 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
 
 - (id)init
 {
-    if (self = [super init])
+    CTAssetsGroupViewController *groupViewController = [[CTAssetsGroupViewController alloc] init];
+    
+    if (self = [super initWithRootViewController:groupViewController])
     {
-        _assetsLibrary          = [self.class defaultAssetsLibrary];
-        _assetsFilter           = [ALAssetsFilter allAssets];
-        _selectedAssets         = [[NSMutableArray alloc] init];
-        _showsCancelButton      = YES;
-        _showsNumberOfAssets    = YES;
+        _assetsLibrary      = [self.class defaultAssetsLibrary];
+        _assetsFilter       = [ALAssetsFilter allAssets];
+        _selectedAssets     = [[NSMutableArray alloc] init];
+        _showsCancelButton  = YES;
 
         self.preferredContentSize = kPopoverContentSize;
         
-        [self setupNavigationController];
         [self addKeyValueObserver];
     }
     
     return self;
 }
 
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+}
+
 - (void)dealloc
 {
     [self removeKeyValueObserver];
 }
-
-
-
-#pragma mark - Setup Navigation Controller
-
-- (void)setupNavigationController
-{
-    CTAssetsGroupViewController *vc = [[CTAssetsGroupViewController alloc] init];
-    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:vc];
-    nav.delegate = self;
-    
-    [nav willMoveToParentViewController:self];
-    [nav.view setFrame:self.view.frame];
-    [self.view addSubview:nav.view];
-    [self addChildViewController:nav];
-    [nav didMoveToParentViewController:self];
-}
-
-
-
-#pragma mark - UINavigationControllerDelegate
-
-
-- (id<UIViewControllerAnimatedTransitioning>)navigationController:(UINavigationController *)navigationController
-                                  animationControllerForOperation:(UINavigationControllerOperation)operation
-                                               fromViewController:(UIViewController *)fromVC
-                                                 toViewController:(UIViewController *)toVC
-{
-    if ((operation == UINavigationControllerOperationPush && [toVC isKindOfClass:[CTAssetsPageViewController class]]) ||
-        (operation == UINavigationControllerOperationPop && [fromVC isKindOfClass:[CTAssetsPageViewController class]]))
-    {
-        CTAssetsViewControllerTransition *transition = [[CTAssetsViewControllerTransition alloc] init];
-        transition.operation = operation;
-        
-        return transition;
-    }
-    else
-    {
-        return nil;
-    }
-}
-
-
-
 
 
 #pragma mark - ALAssetsLibrary
@@ -165,9 +128,7 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
 
 - (void)toggleDoneButton
 {
-    UINavigationController *nav = (UINavigationController *)self.childViewControllers[0];
-    
-    for (UIViewController *viewController in nav.viewControllers)
+    for (UIViewController *viewController in self.viewControllers)
         viewController.navigationItem.rightBarButtonItem.enabled = (self.selectedAssets.count > 0);
 }
 
@@ -254,7 +215,7 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
     return [NSString stringWithFormat:format, self.deviceModel];
 }
 
-- (UILabel *)auxiliaryLabelWithFont:(UIFont *)font color:(UIColor *)color text:(NSString *)text
+- (UILabel *)specialViewLabelWithFont:(UIFont *)font color:(UIColor *)color text:(NSString *)text
 {
     UILabel *label = [[UILabel alloc] init];
     label.translatesAutoresizingMaskIntoConstraints = NO;
@@ -284,23 +245,13 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
     return centerView;
 }
 
-- (UIView *)auxiliaryViewWithCenterView:(UIView *)centerView
+- (UIView *)specialViewWithCenterView:(UIView *)centerView
 {
     UIView *view = [[UIView alloc] init];
     [view addSubview:centerView];
     
     [view addConstraint:[self horizontallyAlignedConstraintWithItem:centerView toItem:view]];
     [view addConstraint:[self verticallyAlignedConstraintWithItem:centerView toItem:view]];
-    
-    NSString *accessibilityLabel = @"";
-    
-    for (UIView *subview in centerView.subviews)
-    {
-        if ([subview isMemberOfClass:[UILabel class]])
-            accessibilityLabel = [accessibilityLabel stringByAppendingFormat:@"%@\n", ((UILabel *)subview).text];
-    }
-    
-    view.accessibilityLabel = accessibilityLabel;
     
     return view;
 }
@@ -332,40 +283,40 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
     UIImageView *padlock = [self padlockImageView];
     
     UILabel *title =
-    [self auxiliaryLabelWithFont:[UIFont boldSystemFontOfSize:17.0]
-                           color:[UIColor colorWithRed:129.0/255.0 green:136.0/255.0 blue:148.0/255.0 alpha:1]
-                            text:NSLocalizedString(@"This app does not have access to your photos or videos.", nil)];
+    [self specialViewLabelWithFont:[UIFont boldSystemFontOfSize:17.0]
+                             color:[UIColor colorWithRed:129.0/255.0 green:136.0/255.0 blue:148.0/255.0 alpha:1]
+                              text:NSLocalizedString(@"This app does not have access to your photos or videos.", nil)];
     UILabel *message =
-    [self auxiliaryLabelWithFont:[UIFont systemFontOfSize:14.0]
-                           color:[UIColor colorWithRed:129.0/255.0 green:136.0/255.0 blue:148.0/255.0 alpha:1]
-                            text:NSLocalizedString(@"You can enable access in Privacy Settings.", nil)];
+    [self specialViewLabelWithFont:[UIFont systemFontOfSize:14.0]
+                             color:[UIColor colorWithRed:129.0/255.0 green:136.0/255.0 blue:148.0/255.0 alpha:1]
+                              text:NSLocalizedString(@"You can enable access in Privacy Settings.", nil)];
     
     UIView *centerView = [self centerViewWithViews:@[padlock, title, message]];
     
     NSDictionary *viewsDictionary = NSDictionaryOfVariableBindings(padlock, title, message);
     [centerView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[padlock]-20-[title]-[message]|" options:0 metrics:nil views:viewsDictionary]];
     
-    return [self auxiliaryViewWithCenterView:centerView];
+    return [self specialViewWithCenterView:centerView];
 }
 
 - (UIView *)noAssetsView
 {
     UILabel *title =
-    [self auxiliaryLabelWithFont:[UIFont systemFontOfSize:26.0]
-                           color:[UIColor colorWithRed:153.0/255.0 green:153.0/255.0 blue:153.0/255.0 alpha:1]
-                            text:NSLocalizedString(@"No Photos or Videos", nil)];
+    [self specialViewLabelWithFont:[UIFont systemFontOfSize:26.0]
+                             color:[UIColor colorWithRed:153.0/255.0 green:153.0/255.0 blue:153.0/255.0 alpha:1]
+                              text:NSLocalizedString(@"No Photos or Videos", nil)];
     
     UILabel *message =
-    [self auxiliaryLabelWithFont:[UIFont systemFontOfSize:18.0]
-                           color:[UIColor colorWithRed:153.0/255.0 green:153.0/255.0 blue:153.0/255.0 alpha:1]
-                            text:[self noAssetsMessage]];
+    [self specialViewLabelWithFont:[UIFont systemFontOfSize:18.0]
+                             color:[UIColor colorWithRed:153.0/255.0 green:153.0/255.0 blue:153.0/255.0 alpha:1]
+                              text:[self noAssetsMessage]];
     
     UIView *centerView = [self centerViewWithViews:@[title, message]];
     
     NSDictionary *viewsDictionary = NSDictionaryOfVariableBindings(title, message);
     [centerView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[title]-[message]|" options:0 metrics:nil views:viewsDictionary]];
 
-    return [self auxiliaryViewWithCenterView:centerView];
+    return [self specialViewWithCenterView:centerView];
 }
 
 
@@ -444,7 +395,7 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
     if ([self.delegate respondsToSelector:@selector(assetsPickerControllerDidCancel:)])
         [self.delegate assetsPickerControllerDidCancel:self];
     
-    [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+    [self.presentingViewController dismissViewControllerAnimated:NO completion:nil];
 }
 
 

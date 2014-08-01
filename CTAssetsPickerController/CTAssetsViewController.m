@@ -30,10 +30,6 @@
 #import "CTAssetsViewController.h"
 #import "CTAssetsViewCell.h"
 #import "CTAssetsSupplementaryView.h"
-#import "CTAssetsPageViewController.h"
-#import "CTAssetsViewControllerTransition.h"
-
-
 
 
 
@@ -86,7 +82,6 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
     }
     
     [self addNotificationObserver];
-    [self addGestureRecognizer];
     
     return self;
 }
@@ -115,7 +110,7 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
 
 - (CTAssetsPickerController *)picker
 {
-    return (CTAssetsPickerController *)self.navigationController.parentViewController;
+    return (CTAssetsPickerController *)self.navigationController;
 }
 
 
@@ -138,7 +133,7 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
 - (void)setupButtons
 {
     self.navigationItem.rightBarButtonItem =
-    [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Done", nil)
+    [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"다음", nil)
                                      style:UIBarButtonItemStyleDone
                                     target:self.picker
                                     action:@selector(finishPickingAssets:)];
@@ -158,26 +153,14 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
     if (!self.assets)
         self.assets = [[NSMutableArray alloc] init];
     else
-        return;
+        [self.assets removeAllObjects];
     
     ALAssetsGroupEnumerationResultsBlock resultsBlock = ^(ALAsset *asset, NSUInteger index, BOOL *stop)
     {
         if (asset)
-        {
-            BOOL shouldShowAsset;
-            
-            if ([self.picker.delegate respondsToSelector:@selector(assetsPickerController:shouldShowAsset:)])
-                shouldShowAsset = [self.picker.delegate assetsPickerController:self.picker shouldShowAsset:asset];
-            else
-                shouldShowAsset = YES;
-            
-            if (shouldShowAsset)
-                [self.assets addObject:asset];
-        }
+            [self.assets addObject:asset];
         else
-        {
             [self reloadData];
-        }
     };
     
     [self.assetsGroup enumerateAssetsUsingBlock:resultsBlock];
@@ -190,7 +173,7 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
 {
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
     layout.itemSize             = kThumbnailSize;
-    layout.footerReferenceSize  = CGSizeMake(0, 47.0);
+    layout.footerReferenceSize  = CGSizeMake(0, 44.0);
     
     if (UIInterfaceOrientationIsLandscape(orientation) && (UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiomPad))
     {
@@ -239,7 +222,7 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
 {
     // Reload all assets
     if (notification.userInfo == nil)
-        [self performSelectorOnMainThread:@selector(reloadAssets) withObject:nil waitUntilDone:NO];
+        [self performSelectorOnMainThread:@selector(setupAssets) withObject:nil waitUntilDone:NO];
     
     // Reload effected assets groups
     if (notification.userInfo.count > 0)
@@ -259,7 +242,7 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
     
     // Reload assets if current assets group is updated
     if (matchedGroups.count > 0)
-        [self performSelectorOnMainThread:@selector(reloadAssets) withObject:nil waitUntilDone:NO];
+        [self performSelectorOnMainThread:@selector(setupAssets) withObject:nil waitUntilDone:NO];
 }
 
 
@@ -272,48 +255,8 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
     
     [[self.toolbarItems objectAtIndex:1] setTitle:[self.picker toolbarTitle]];
     
-    [self.navigationController setToolbarHidden:(selectedAssets.count == 0) animated:YES];
+    [self.picker setToolbarHidden:(selectedAssets.count == 0) animated:YES];
 }
-
-
-
-#pragma mark - Gesture Recognizer
-
-- (void)addGestureRecognizer
-{
-    UILongPressGestureRecognizer *longPress =
-    [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(pushPageViewController:)];
-    
-    [self.collectionView addGestureRecognizer:longPress];
-}
-
-
-#pragma mark - Push Assets Page View Controller
-
-- (void)pushPageViewController:(UILongPressGestureRecognizer *)longPress
-{
-    if (longPress.state == UIGestureRecognizerStateBegan)
-    {
-        CGPoint point           = [longPress locationInView:self.collectionView];
-        NSIndexPath *indexPath  = [self.collectionView indexPathForItemAtPoint:point];
-
-        CTAssetsPageViewController *vc = [[CTAssetsPageViewController alloc] initWithAssets:self.assets];
-        vc.pageIndex = indexPath.item;
-
-        [self.navigationController pushViewController:vc animated:YES];
-    }
-}
-
-
-
-#pragma mark - Reload Assets
-
-- (void)reloadAssets
-{
-    self.assets = nil;
-    [self setupAssets];
-}
-
 
 
 #pragma mark - Reload Data
@@ -323,7 +266,9 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
     if (self.assets.count > 0)
     {
         [self.collectionView reloadData];
-        [self.collectionView setContentOffset:CGPointMake(0, self.collectionViewLayout.collectionViewContentSize.height)];
+        
+        if (CGPointEqualToPoint(self.collectionView.contentOffset, CGPointZero))
+            [self.collectionView setContentOffset:CGPointMake(0, self.collectionViewLayout.collectionViewContentSize.height)];
     }
     else
     {
@@ -337,14 +282,6 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
 - (void)showNoAssets
 {
     self.collectionView.backgroundView = [self.picker noAssetsView];
-    [self setAccessibilityFocus];
-}
-
-- (void)setAccessibilityFocus
-{
-    self.collectionView.isAccessibilityElement  = YES;
-    self.collectionView.accessibilityLabel      = self.collectionView.backgroundView.accessibilityLabel;
-    UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, self.collectionView);
 }
 
 
@@ -380,6 +317,8 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
     {
         cell.selected = YES;
         [collectionView selectItemAtIndexPath:indexPath animated:NO scrollPosition:UICollectionViewScrollPositionNone];
+        
+         cell.selectedIndex = [self.picker.selectedAssets indexOfObject:asset];
     }
     
     [cell bind:asset];
@@ -395,9 +334,6 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
                                               forIndexPath:indexPath];
     
     [view bind:self.assets];
-    
-    if (self.assets.count == 0)
-        view.hidden = YES;
     
     return view;
 }
@@ -424,6 +360,10 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
     ALAsset *asset = [self.assets objectAtIndex:indexPath.row];
     
     [self.picker selectAsset:asset];
+
+    // add. kyle.
+    [self updateSelectdIndexMark];
+
     
     if ([self.picker.delegate respondsToSelector:@selector(assetsPickerController:didSelectAsset:)])
         [self.picker.delegate assetsPickerController:self.picker didSelectAsset:asset];
@@ -444,6 +384,9 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
     ALAsset *asset = [self.assets objectAtIndex:indexPath.row];
     
     [self.picker deselectAsset:asset];
+    
+    // add. kyle.
+    [self updateSelectdIndexMark];
     
     if ([self.picker.delegate respondsToSelector:@selector(assetsPickerController:didDeselectAsset:)])
         [self.picker.delegate assetsPickerController:self.picker didDeselectAsset:asset];
@@ -473,6 +416,26 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
     
     if ([self.picker.delegate respondsToSelector:@selector(assetsPickerController:didUnhighlightAsset:)])
         [self.picker.delegate assetsPickerController:self.picker didUnhighlightAsset:asset];
+}
+
+- (void)updateSelectdIndexMark
+{
+    // 선택한 항목의 index 을 표시해주기위해 cell.selectedIndex를 셋팅한다
+    // kyle.
+    for (int loop=0; loop<self.assets.count; loop++)
+    {
+        CTAssetsViewCell *cell = (CTAssetsViewCell *)[self.collectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:loop inSection:0]];
+        
+        if (cell.selected == NO)
+            continue;
+        
+        if ([self.picker.selectedAssets containsObject:cell.asset])
+        {
+            cell.selectedIndex = [self.picker.selectedAssets indexOfObject:cell.asset];
+            [cell setNeedsDisplay];
+        }
+    }
+    //
 }
 
 

@@ -42,20 +42,7 @@
 
 @implementation CTAssetsGroupViewCell
 
-- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
-{
-    if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])
-    {
-        self.opaque                             = YES;
-        self.isAccessibilityElement             = YES;
-        self.textLabel.backgroundColor          = self.backgroundColor;
-        self.detailTextLabel.backgroundColor    = self.backgroundColor;
-    }
-    
-    return self;
-}
-
-- (void)bind:(ALAssetsGroup *)assetsGroup showNumberOfAssets:(BOOL)showNumberOfAssets;
+- (void)bind:(ALAssetsGroup *)assetsGroup
 {
     self.assetsGroup            = assetsGroup;
     
@@ -65,14 +52,9 @@
     
     self.imageView.image        = [UIImage imageWithCGImage:posterImage scale:scale orientation:UIImageOrientationUp];
     self.textLabel.text         = [assetsGroup valueForProperty:ALAssetsGroupPropertyName];
+    self.detailTextLabel.text   = [NSString stringWithFormat:@"%ld", (long)assetsGroup.numberOfAssets];
     self.accessoryType          = UITableViewCellAccessoryDisclosureIndicator;
-    
-    if (showNumberOfAssets)
-        self.detailTextLabel.text = [NSString stringWithFormat:@"%ld", (long)assetsGroup.numberOfAssets];
 }
-
-
-#pragma mark - Accessibility Label
 
 - (NSString *)accessibilityLabel
 {
