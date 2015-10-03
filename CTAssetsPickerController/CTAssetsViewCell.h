@@ -33,7 +33,8 @@
 @interface CTAssetsViewCell : UICollectionViewCell
 
 @property (nonatomic, assign, getter = isEnabled) BOOL enabled;
+@property (nonatomic) NSInteger selectedIndex;
+@property (nonatomic, strong) ALAsset *asset;
 
 - (void)bind:(ALAsset *)asset;
-
 @end

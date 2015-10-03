@@ -32,7 +32,6 @@
 
 @interface CTAssetsViewCell ()
 
-@property (nonatomic, strong) ALAsset *asset;
 @property (nonatomic, strong) UIImage *image;
 @property (nonatomic, copy) NSString *type;
 @property (nonatomic, copy) NSString *title;
@@ -170,7 +169,41 @@ static UIColor *disabledColor;
     CGContextSetFillColorWithColor(context, selectedColor.CGColor);
     CGContextFillRect(context, rect);
     
-    [checkedIcon drawAtPoint:CGPointMake(CGRectGetMaxX(rect) - checkedIcon.size.width, CGRectGetMinY(rect))];
+//    [checkedIcon drawAtPoint:CGPointMake(CGRectGetMaxX(rect) - checkedIcon.size.width, CGRectGetMinY(rect))];
+    
+    NSString *count = [NSString stringWithFormat:@"%d",(int)self.selectedIndex+1];
+    
+    
+    CGSize badgeTextSize = [count sizeWithFont:[UIFont boldSystemFontOfSize:13.]];
+    CGRect badgeViewFrame = CGRectInset(CGRectIntegral(CGRectMake(rect.size.width - badgeTextSize.width - 10,
+                                                                  5, badgeTextSize.width, badgeTextSize.height)), -7, -2);
+    
+    CGContextSaveGState(context);
+    
+    UIColor *badgeColor = [UIColor colorWithRed:14.0/255.0 green:122.0/255.0 blue:254.0/255.0 alpha:1.0];
+    CGContextSetFillColorWithColor(context, badgeColor.CGColor);
+    CGMutablePathRef path = CGPathCreateMutable();
+    CGPathAddArc(path, NULL, badgeViewFrame.origin.x + badgeViewFrame.size.width - badgeViewFrame.size.height / 2,
+                 badgeViewFrame.origin.y + badgeViewFrame.size.height / 2, badgeViewFrame.size.height / 2, M_PI / 2, M_PI * 3 / 2, YES);
+    CGPathAddArc(path, NULL, badgeViewFrame.origin.x + badgeViewFrame.size.height / 2,
+                 badgeViewFrame.origin.y + badgeViewFrame.size.height / 2, badgeViewFrame.size.height / 2, M_PI * 3 / 2, M_PI / 2, YES);
+    CGContextAddPath(context, path);
+    CGContextDrawPath(context, kCGPathFill);
+    CFRelease(path);
+    CGContextRestoreGState(context);
+
+    CGContextSaveGState(context);
+    
+
+//    CGContextSetBlendMode(context, kCGBlendModeClear);
+    [[UIColor whiteColor] set];
+//    CGContextSetFillColorWithColor(context, [UIColor whiteColor].CGColor);
+//    CGContextSetStrokeColorWithColor(context, [UIColor whiteColor].CGColor);
+    [count drawInRect:CGRectInset(badgeViewFrame, 7, 2) withFont:[UIFont boldSystemFontOfSize:13.]];
+    CGContextRestoreGState(context);
+
+
+
 }
 
 

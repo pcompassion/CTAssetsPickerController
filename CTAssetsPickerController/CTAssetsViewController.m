@@ -133,7 +133,7 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
 - (void)setupButtons
 {
     self.navigationItem.rightBarButtonItem =
-    [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Done", nil)
+    [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"다음", nil)
                                      style:UIBarButtonItemStyleDone
                                     target:self.picker
                                     action:@selector(finishPickingAssets:)];
@@ -317,6 +317,8 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
     {
         cell.selected = YES;
         [collectionView selectItemAtIndexPath:indexPath animated:NO scrollPosition:UICollectionViewScrollPositionNone];
+        
+         cell.selectedIndex = [self.picker.selectedAssets indexOfObject:asset];
     }
     
     [cell bind:asset];
@@ -358,6 +360,10 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
     ALAsset *asset = [self.assets objectAtIndex:indexPath.row];
     
     [self.picker selectAsset:asset];
+
+    // add. kyle.
+    [self updateSelectdIndexMark];
+
     
     if ([self.picker.delegate respondsToSelector:@selector(assetsPickerController:didSelectAsset:)])
         [self.picker.delegate assetsPickerController:self.picker didSelectAsset:asset];
@@ -378,6 +384,9 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
     ALAsset *asset = [self.assets objectAtIndex:indexPath.row];
     
     [self.picker deselectAsset:asset];
+    
+    // add. kyle.
+    [self updateSelectdIndexMark];
     
     if ([self.picker.delegate respondsToSelector:@selector(assetsPickerController:didDeselectAsset:)])
         [self.picker.delegate assetsPickerController:self.picker didDeselectAsset:asset];
@@ -407,6 +416,26 @@ NSString * const CTAssetsSupplementaryViewIdentifier = @"CTAssetsSupplementaryVi
     
     if ([self.picker.delegate respondsToSelector:@selector(assetsPickerController:didUnhighlightAsset:)])
         [self.picker.delegate assetsPickerController:self.picker didUnhighlightAsset:asset];
+}
+
+- (void)updateSelectdIndexMark
+{
+    // 선택한 항목의 index 을 표시해주기위해 cell.selectedIndex를 셋팅한다
+    // kyle.
+    for (int loop=0; loop<self.assets.count; loop++)
+    {
+        CTAssetsViewCell *cell = (CTAssetsViewCell *)[self.collectionView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:loop inSection:0]];
+        
+        if (cell.selected == NO)
+            continue;
+        
+        if ([self.picker.selectedAssets containsObject:cell.asset])
+        {
+            cell.selectedIndex = [self.picker.selectedAssets indexOfObject:cell.asset];
+            [cell setNeedsDisplay];
+        }
+    }
+    //
 }
 
 

@@ -122,14 +122,14 @@
     if (self.picker.showsCancelButton)
     {
         self.navigationItem.leftBarButtonItem =
-        [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Cancel", nil)
+        [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"취소", nil)
                                          style:UIBarButtonItemStylePlain
                                         target:self.picker
                                         action:@selector(dismiss:)];
     }
     
     self.navigationItem.rightBarButtonItem =
-    [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Done", nil)
+    [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"다음", nil)
                                      style:UIBarButtonItemStyleDone
                                     target:self.picker
                                     action:@selector(finishPickingAssets:)];
@@ -337,14 +337,9 @@
 - (void)reloadData
 {
     if (self.groups.count > 0)
-    {
-        [self hideSpecialView];
         [self.tableView reloadData];
-    }
     else
-    {
         [self showNoAssets];
-    }
 }
 
 
@@ -359,11 +354,6 @@
 - (void)showNoAssets
 {
     self.tableView.backgroundView = [self.picker noAssetsView];
-}
-
-- (void)hideSpecialView
-{
-    self.tableView.backgroundView = nil;
 }
 
 
