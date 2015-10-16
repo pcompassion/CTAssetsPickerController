@@ -1,20 +1,20 @@
 /*
  CTAssetsPickerController.m
- 
+
  The MIT License (MIT)
- 
+
  Copyright (c) 2013 Clement CN Tsang
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in
  all copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22,7 +22,7 @@
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
- 
+
  */
 
 #import "CTAssetsPickerConstants.h"
@@ -50,7 +50,7 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
 - (id)init
 {
     CTAssetsGroupViewController *groupViewController = [[CTAssetsGroupViewController alloc] init];
-    
+
     if (self = [super initWithRootViewController:groupViewController])
     {
         _assetsLibrary      = [self.class defaultAssetsLibrary];
@@ -59,10 +59,10 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
         _showsCancelButton  = YES;
 
         self.preferredContentSize = kPopoverContentSize;
-        
+
         [self addKeyValueObserver];
     }
-    
+
     return self;
 }
 
@@ -199,19 +199,19 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
 {
     UIImageView *padlock = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"CTAssetsPickerLocked"]];
     padlock.translatesAutoresizingMaskIntoConstraints = NO;
-    
+
     return padlock;
 }
 
 - (NSString *)noAssetsMessage
 {
     NSString *format;
-    
+
     if ([self isCameraDeviceAvailable])
         format = NSLocalizedString(@"You can take photos and videos using the camera, or sync photos and videos onto your %@\nusing iTunes.", nil);
     else
         format = NSLocalizedString(@"You can sync photos and videos onto your %@ using iTunes.", nil);
-    
+
     return [NSString stringWithFormat:format, self.deviceModel];
 }
 
@@ -225,9 +225,9 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
     label.font          = font;
     label.textColor     = color;
     label.text          = text;
-    
+
     [label sizeToFit];
-    
+
     return label;
 }
 
@@ -235,13 +235,13 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
 {
     UIView *centerView = [[UIView alloc] init];
     centerView.translatesAutoresizingMaskIntoConstraints = NO;
-    
+
     for (UIView *view in views)
     {
         [centerView addSubview:view];
         [centerView addConstraint:[self horizontallyAlignedConstraintWithItem:view toItem:centerView]];
     }
-    
+
     return centerView;
 }
 
@@ -249,10 +249,10 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
 {
     UIView *view = [[UIView alloc] init];
     [view addSubview:centerView];
-    
+
     [view addConstraint:[self horizontallyAlignedConstraintWithItem:centerView toItem:view]];
     [view addConstraint:[self verticallyAlignedConstraintWithItem:centerView toItem:view]];
-    
+
     return view;
 }
 
@@ -281,7 +281,7 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
 - (UIView *)notAllowedView
 {
     UIImageView *padlock = [self padlockImageView];
-    
+
     UILabel *title =
     [self specialViewLabelWithFont:[UIFont boldSystemFontOfSize:17.0]
                              color:[UIColor colorWithRed:129.0/255.0 green:136.0/255.0 blue:148.0/255.0 alpha:1]
@@ -290,12 +290,12 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
     [self specialViewLabelWithFont:[UIFont systemFontOfSize:14.0]
                              color:[UIColor colorWithRed:129.0/255.0 green:136.0/255.0 blue:148.0/255.0 alpha:1]
                               text:NSLocalizedString(@"You can enable access in Privacy Settings.", nil)];
-    
+
     UIView *centerView = [self centerViewWithViews:@[padlock, title, message]];
-    
+
     NSDictionary *viewsDictionary = NSDictionaryOfVariableBindings(padlock, title, message);
     [centerView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[padlock]-20-[title]-[message]|" options:0 metrics:nil views:viewsDictionary]];
-    
+
     return [self specialViewWithCenterView:centerView];
 }
 
@@ -305,14 +305,14 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
     [self specialViewLabelWithFont:[UIFont systemFontOfSize:26.0]
                              color:[UIColor colorWithRed:153.0/255.0 green:153.0/255.0 blue:153.0/255.0 alpha:1]
                               text:NSLocalizedString(@"No Photos or Videos", nil)];
-    
+
     UILabel *message =
     [self specialViewLabelWithFont:[UIFont systemFontOfSize:18.0]
                              color:[UIColor colorWithRed:153.0/255.0 green:153.0/255.0 blue:153.0/255.0 alpha:1]
                               text:[self noAssetsMessage]];
-    
+
     UIView *centerView = [self centerViewWithViews:@[title, message]];
-    
+
     NSDictionary *viewsDictionary = NSDictionaryOfVariableBindings(title, message);
     [centerView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[title]-[message]|" options:0 metrics:nil views:viewsDictionary]];
 
@@ -333,24 +333,24 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
 {
     if (self.selectedAssets.count == 0)
         return nil;
-    
+
     NSPredicate *photoPredicate = [self predicateOfAssetType:ALAssetTypePhoto];
     NSPredicate *videoPredicate = [self predicateOfAssetType:ALAssetTypeVideo];
-    
+
     BOOL photoSelected = ([self.selectedAssets filteredArrayUsingPredicate:photoPredicate].count > 0);
     BOOL videoSelected = ([self.selectedAssets filteredArrayUsingPredicate:videoPredicate].count > 0);
-    
-    NSString *format;
-    
+
+    NSString *format = NSLocalizedString(@"%ld Items Selected", nil);
+
     if (photoSelected && videoSelected)
         format = NSLocalizedString(@"%ld Items Selected", nil);
-    
+
     else if (photoSelected)
         format = (self.selectedAssets.count > 1) ? NSLocalizedString(@"%ld Photos Selected", nil) : NSLocalizedString(@"%ld Photo Selected", nil);
-    
+
     else if (videoSelected)
         format = (self.selectedAssets.count > 1) ? NSLocalizedString(@"%ld Videos Selected", nil) : NSLocalizedString(@"%ld Video Selected", nil);
-    
+
     return [NSString stringWithFormat:format, (long)self.selectedAssets.count];
 }
 
@@ -364,13 +364,13 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
                                      style:UIBarButtonItemStylePlain
                                     target:nil
                                     action:nil];
-    
+
     NSDictionary *attributes = @{NSForegroundColorAttributeName : [UIColor blackColor]};
-    
+
     [title setTitleTextAttributes:attributes forState:UIControlStateNormal];
     [title setTitleTextAttributes:attributes forState:UIControlStateDisabled];
     [title setEnabled:NO];
-    
+
     return title;
 }
 
@@ -383,7 +383,7 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
 {
     UIBarButtonItem *title = [self titleButtonItem];
     UIBarButtonItem *space = [self spaceButtonItem];
-    
+
     return @[space, title, space];
 }
 
@@ -394,7 +394,7 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
 {
     if ([self.delegate respondsToSelector:@selector(assetsPickerControllerDidCancel:)])
         [self.delegate assetsPickerControllerDidCancel:self];
-    
+
     [self.presentingViewController dismissViewControllerAnimated:NO completion:nil];
 }
 
